@@ -1,0 +1,114 @@
+<view class="container">
+  <view class="card">
+    <view class="title">{{tmap.landing}}</view>
+    <view class="muted">user_id: {{userId}}</view>
+    <view class="muted">Step {{step + 1}} / {{totalSteps}}</view>
+    <button class="btn" bindtap="switchLang">Switch {{lang === 'zh' ? 'EN' : '中文'}}</button>
+    <view class="pill">{{status}}</view>
+    <view class="muted">{{providerStatus}}</view>
+    <view class="muted">{{providerDebugMessage}}</view>
+    <button size="mini" bindtap="refreshProviderStatus">Refresh provider logs</button>
+    <view class="muted" wx:if="{{providerLogPath}}">Log file: {{providerLogPath}}</view>
+    <text selectable="true" class="muted">{{providerLogTail}}</text>
+
+    <view wx:if="{{!apiConfigured}}" class="muted">OCR backend not configured.</view>
+    <button wx:if="{{!apiConfigured}}" bindtap="openApiConfig" size="mini">Configure OCR backend</button>
+    <button wx:if="{{!apiConfigured && !demoModeEnabled}}" bindtap="enableDemoMode" size="mini">Enable demo mode (no Tencent)</button>
+    <view class="muted" wx:if="{{demoModeEnabled}}">Demo mode enabled: OCR uses local mock values.</view>
+
+    <view wx:if="{{showApiConfig}}">
+      <input placeholder="https://your-domain.example.com" data-key="apiBaseInput" bindinput="onInput" value="{{apiBaseInput}}" />
+      <button bindtap="saveApiBase" size="mini">Save API Base</button>
+      <button bindtap="testConnection" size="mini">Test / Load docs</button>
+      <view class="muted">Use HTTPS domain from legal-domain whitelist. 127.0.0.1 is blocked.</view>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{step === 0}}">
+    <view class="subtitle">1. {{tmap.ocr}}</view>
+    <button bindtap="runOcr">Scan/Upload passport</button>
+    <view class="muted">{{ocr.passport_number}} {{ocr.full_name_latin}}</view>
+  </view>
+
+  <view class="card" wx:if="{{step === 1}}">
+    <view class="subtitle">2. {{tmap.liveness}}</view>
+    <button bindtap="runLiveness">Run liveness</button>
+    <view class="muted">passed: {{liveness.liveness_passed}} score: {{liveness.liveness_score}}</view>
+  </view>
+
+  <view class="card" wx:if="{{step === 2}}">
+    <view class="subtitle">3. KYC details + {{tmap.address}}</view>
+    <view class="muted">Passport OCR fields:</view>
+    <view class="muted" wx:if="{{ocrDone}}">OCR OK: {{ocr.passport_number}} {{ocr.full_name_latin}}</view>
+    <view class="muted" wx:if="{{ocrDone}}">OCR source: {{ocrSource}}</view>
+    <view class="muted" wx:if="{{!ocrDone}}">OCR data is empty. Go Back and run step 1.</view>
+    <view class="muted" wx:if="{{!ocrItems.length}}">No OCR data yet. Please run step 1 (Passport OCR).</view>
+    <block wx:for="{{ocrItems}}" wx:key="key">
+      <input placeholder="{{item.key}}" data-key="{{item.key}}" bindinput="onKycInput" value="{{item.value}}" />
+    </block>
+    <input placeholder="full_name_cn" data-key="full_name_cn" bindinput="onKycInput" value="{{kycFinal.full_name_cn}}" />
+    <input placeholder="address_line1" data-key="address_line1" bindinput="onAddressInput" value="{{address.address_line1}}" />
+    <input placeholder="address_line2" data-key="address_line2" bindinput="onAddressInput" value="{{address.address_line2}}" />
+    <input placeholder="city" data-key="city" bindinput="onAddressInput" value="{{address.city}}" />
+    <input placeholder="region" data-key="region" bindinput="onAddressInput" value="{{address.region}}" />
+    <input placeholder="postal_code" data-key="postal_code" bindinput="onAddressInput" value="{{address.postal_code}}" />
+    <input placeholder="country" data-key="country" bindinput="onAddressInput" value="{{address.country}}" />
+    <button bindtap="submitKyc">Submit KYC</button>
+  </view>
+
+  <view class="card" wx:if="{{step === 3}}">
+    <view class="subtitle">4. {{tmap.docs}}</view>
+    <view>{{offer.doc_type}} ({{offer.doc_version}})</view>
+    <view>{{consent.doc_type}} ({{consent.doc_version}})</view>
+    <checkbox-group bindchange="toggleOffer"><label><checkbox value="ok"/> Offer accepted</label></checkbox-group>
+    <checkbox-group bindchange="togglePd"><label><checkbox value="ok"/> PD consent accepted</label></checkbox-group>
+    <button bindtap="acceptDocs">Accept docs</button>
+  </view>
+
+  <view class="card" wx:if="{{step === 4}}">
+    <view class="subtitle">5. {{tmap.sms}}</view>
+    <input placeholder="+79991234567" data-key="rfPhone" bindinput="onInput" value="{{rfPhone}}" />
+    <button bindtap="sendOtp">Send code</button>
+    <input placeholder="123456" data-key="otpCode" bindinput="onInput" value="{{otpCode}}" />
+    <button bindtap="verifyOtp">Verify code + create card</button>
+  </view>
+
+  <view class="card" wx:if="{{step === 5}}">
+    <view class="subtitle">6. {{tmap.card}}</view>
+    <view class="muted">{{card.masked_pan}} • balance {{card.balance_rub}}</view>
+    <button bindtap="nextStep">Continue</button>
+  </view>
+
+  <view class="card" wx:if="{{step === 6}}">
+    <view class="subtitle">7. {{tmap.funding}}</view>
+    <button bindtap="bindCny">Bind mock CNY card (token only)</button>
+    <view class="muted">{{cny.brand}} ****{{cny.last4}} {{cny.cny_funding_token}}</view>
+  </view>
+
+  <view class="card" wx:if="{{step === 7}}">
+    <view class="subtitle">8. {{tmap.topup}}</view>
+    <input type="number" data-key="topupAmount" bindinput="onInput" value="{{topupAmount}}" />
+    <button bindtap="topup">Topup CNY -> RUB</button>
+    <view class="muted">balance: {{txResult.balance_rub}}</view>
+  </view>
+
+  <view class="card" wx:if="{{step === 8}}">
+    <view class="subtitle">9. {{tmap.qr}}</view>
+    <button bindtap="scanQr">Scan QR</button>
+    <view class="muted">{{draft.merchant}} {{draft.amount}} {{draft.currency}}</view>
+    <input password="true" placeholder="PIN 1111" data-key="pin" bindinput="onInput" value="{{pin}}" />
+    <button bindtap="confirmPay">Confirm payment</button>
+    <view class="muted">{{txResult.result}} {{txResult.tx.merchant}}</view>
+  </view>
+
+  <view class="card" wx:if="{{step === 9}}">
+    <view class="subtitle">10. Export JSON</view>
+    <button bindtap="exportJson">Export</button>
+    <text selectable="true" class="muted">{{exportJson}}</text>
+  </view>
+
+  <view class="row">
+    <button bindtap="prevStep" size="mini">Back</button>
+    <button bindtap="nextStep" size="mini">Next</button>
+  </view>
+</view>

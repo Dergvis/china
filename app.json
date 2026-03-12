@@ -1,0 +1,13 @@
+{
+  "pages": [
+    "index"
+  ],
+  "window": {
+    "navigationBarTitleText": "Tourist Card MVP",
+    "navigationBarBackgroundColor": "#0b1f44",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f5f7fb"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

@@ -1,0 +1,2 @@
+@import "./app.wxss";
+button { background: #1f6feb; color: #fff; border-radius: 10rpx; }

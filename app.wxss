@@ -1,0 +1,12 @@
+page { background: #f5f7fb; font-family: Arial, sans-serif; }
+.container { padding: 24rpx; }
+.card { background: #fff; border-radius: 16rpx; padding: 20rpx; margin-bottom: 20rpx; box-shadow: 0 4rpx 12rpx rgba(0,0,0,.06); }
+.title { font-size: 34rpx; font-weight: 700; margin-bottom: 16rpx; color: #0b1f44; }
+.subtitle { font-size: 28rpx; font-weight: 600; margin: 8rpx 0 12rpx; }
+.row { display: flex; gap: 12rpx; margin-bottom: 10rpx; }
+.btn { margin-top: 12rpx; }
+.muted { color: #667; font-size: 24rpx; }
+.ok { color: #168a38; }
+.warn { color: #b46900; }
+input { border: 1rpx solid #dbe1ee; border-radius: 10rpx; padding: 12rpx; }
+.pill { display:inline-block; padding: 6rpx 14rpx; border-radius: 16rpx; background: #eef3ff; color:#2a4b8d; margin-right:8rpx; }
